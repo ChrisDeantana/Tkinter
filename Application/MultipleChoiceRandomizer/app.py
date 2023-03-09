@@ -8,12 +8,16 @@ import openpyxl  # row and col starts from 1 - read
 import xlsxwriter  # row and col starts from 0 - write
 import random
 
+page_content = ""
+
 
 def insert_input(difficulty, category, type, num, z, sheet_obj, list):
     row = sheet_obj.max_row - 2  # 30
     col = sheet_obj.max_column
     count = 0
-    page_content = "Notice \n"
+    global page_content
+    if z == 0:
+        page_content += "Notice \n"
     list_save_id = []
     for i in range(0, row):
         for j in range(0, col):
@@ -25,6 +29,7 @@ def insert_input(difficulty, category, type, num, z, sheet_obj, list):
     if len(list_save_id) < num:
         page_content = page_content + \
             f'There are only {str(len(list_save_id))} Questions that match your specification \n'
+        return "Error"
         # print("There are only " + str(len(list_save_id)) +
         #       " Questions that match your specification")
         # exit()
@@ -70,13 +75,19 @@ def insert_input(difficulty, category, type, num, z, sheet_obj, list):
     desktop_path = os.path.join(os.path.join(
         os.environ['USERPROFILE']), 'Desktop')
     if (os.path.exists(f'{desktop_path}\Generated')):
-        page_content += f'File has been succesfully generated in the {desktop_path}\Generated\n'
-        print("no need to makedir")
+        if z == 0:
+            page_content = page_content + \
+                f'File has been succesfully generated in the {desktop_path}\Generated\n'
+        # print(page_content)
+        # print("no need to makedir")
     else:
-        # page_content += f'A new folder called Generated has been created \n'
         os.makedirs(f'{desktop_path}\Generated')
-        page_content += f'File has been succesfully generated in the {desktop_path}\Generated\n'
-        print("need to makedir")
+        if z == 0:
+            page_content = page_content + f'A new folder called Generated has been created \n'
+            page_content = page_content + \
+                f'File has been succesfully generated in the {desktop_path}\Generated\n'
+        # print(page_content)
+        # print("need to makedir")
 
     workbook = xlsxwriter.Workbook(
         f'{desktop_path}/Generated/output' + str(z) + '.xlsx')
@@ -110,13 +121,6 @@ def insert_input(difficulty, category, type, num, z, sheet_obj, list):
 
     workbook.close()
 
-    # text box
-    text_box = tk.Text(root, height=10, width=40, padx=15, pady=15)
-    text_box.insert(1.0, page_content)
-    text_box.tag_configure("center", justify="center")
-    text_box.tag_add("center", 1.0, "end")
-    text_box.grid(columnspan=2, column=1, row=8, pady=25)
-
 # def open_file():
 #     browse_text.set("loading...")
 #     file = askopenfile(parent=root, mode='rb', title="Choose a file", filetypes=[
@@ -149,7 +153,7 @@ def open_file():
     # read .xlsx file
     path = file
     wb_obj = openpyxl.load_workbook(path)
-    wb_obj.active = wb_obj['Sheet5']
+    wb_obj.active = wb_obj['Sheet1']
     sheet_obj = wb_obj.active
 
     # col and row - the outliers
@@ -173,11 +177,19 @@ def open_file():
     N_of_Sheetsparam = N_of_Sheets_text_box.get("1.0", tk.END)
     NofS = N_of_Sheetsparam.strip()
     NofS = int(NofS)
-
+    global page_content
+    page_content = ""
     for z in range(NofS):
-        insert_input(difficultyparam, categoryparam,
-                     typeparam, NofQ, z, sheet_obj, list)
+        if insert_input(difficultyparam, categoryparam,
+                        typeparam, NofQ, z, sheet_obj, list) == "Error":
+            break
 
+    # text box
+    text_box = tk.Text(root, height=10, width=40, padx=15, pady=15)
+    text_box.insert(1.0, page_content)
+    text_box.tag_configure("center", justify="center")
+    text_box.tag_add("center", 1.0, "end")
+    text_box.grid(columnspan=2, column=1, row=8, pady=25)
     # print(difficultyparam)
     # print(categoryparam)
     # print(typeparam)
@@ -189,14 +201,14 @@ def open_file():
 # THE GUI APPLICATION
 root = tk.Tk()
 root.title("MultipleChoiceRandomizer")
-root.iconbitmap('Application\MultipleChoiceRandomizer\logo.ico')
+root.iconbitmap('logo.ico')
 root.resizable(False, False)
 
 canvas = tk.Canvas(root, width=800, height=300)
 canvas.grid(columnspan=4, rowspan=9)
 
 # logo
-logo = Image.open('Application\MultipleChoiceRandomizer\logo.png')
+logo = Image.open('logo.png')
 logo = ImageTk.PhotoImage(logo)
 logo_label = tk.Label(image=logo)
 # logo_label.image = logo
